@@ -1,19 +1,19 @@
 # SVT Test
-# SVT version 23.1.0
-# Test saved 2023-03-13_1424
+# SVT version 25.2.b1
+# Test saved 2025-06-10_2018
 # Form factor: SV5C_4L8G_MIPI_CPHY_GENERATOR
 # PY3
-# Checksum: 9819bdce6b31f309991ef5825de141c8
+# Checksum: 0bce2190b494f74dc76330b7bc77374b
 # Note: This file is the 'Save' file for the Test.
 #       It should not be used as a standalone Python script.
 #       But it can be used via 'runSvtTest.py'.
 
 
-calOptions = _create('calOptions', 'SvtDataRecord', iespName='None')
-initScope = _create('initScope', 'SvtFunction', iespName='None')
-performScopeMeasurement = _create('performScopeMeasurement', 'SvtFunction', iespName='None')
-writeCalFile = _create('writeCalFile', 'SvtFunction', iespName='None')
-writeRawData = _create('writeRawData', 'SvtFunction', iespName='None')
+calOptions = _create('calOptions', 'SvtDataRecord', iespName=None)
+initScope = _create('initScope', 'SvtFunction', iespName=None)
+performScopeMeasurement = _create('performScopeMeasurement', 'SvtFunction', iespName=None)
+writeCalFile = _create('writeCalFile', 'SvtFunction', iespName=None)
+writeRawData = _create('writeRawData', 'SvtFunction', iespName=None)
 
 cphyParams1 = _create('cphyParams1', 'SvtMipiCphyParams')
 cphyPattern1 = _create('cphyPattern1', 'SvtMipiCphyCustomPattern')
@@ -41,7 +41,7 @@ r'''# The method '_customInit' is a special case.
 pass
 ''',
 False)
-calOptions.serialNumber = '1234'
+calOptions.serialNumber = 'SV5C22110027'
 calOptions.scopeIPAddress = 'TCPIP0::10.20.20.200::inst0::INSTR'
 calOptions.scopeMeasurementDelay = 3000.0
 calOptions.scopeAutoScaleDelay = 2000.0
@@ -63,20 +63,27 @@ osci.read_termination = '\n'
 osci.write_termination = '\n'
 osci.timeout = calOptions.scopeConnectionTimeout
 
-# Set to center by going to default
-osci.write(":SYSTem:PRESet DEFault")
-sleepMillis(calOptions.scopeAutoScaleDelay)
+# Converted Keysight-specific commands to Teledyne LeCroy equivalents
+# osci.write(":SYSTem:PRESet DEFault")
+osci.WriteString("VBS 'app.Reset()'")
 
-# Make sure all skew are at 0. This is not reset by default
-osci.write(":CALibrate:SKEW CHANnel1,0")
-osci.write(":CALibrate:SKEW CHANnel2,0")
-osci.write(":CALibrate:SKEW CHANnel3,0")
-osci.write(":CALibrate:SKEW CHANnel4,0")
+# osci.write(":CALibrate:SKEW CHANnel1,0")
+#osci.write("VBS 'app.Acquisition.C1.Skew = 0'")
+osci.WriteString("VBS 'app.Acquisition.C1.Deskew = 0'", 1) # Working
 
-# Display/Enable the channels
-osci.write(":CHANnel1:DISPlay 1")
-osci.write(":CHANnel2:DISPlay 1")
-osci.write(":CHANnel3:DISPlay 1")
+# osci.write(":CALibrate:SKEW CHANnel2,0")
+osci.WriteString("VBS 'app.Acquisition.C2.Skew = 0'")
+# osci.write(":CALibrate:SKEW CHANnel3,0")
+osci.WriteString("VBS 'app.Acquisition.C3.Skew = 0'")
+# osci.write(":CALibrate:SKEW CHANnel4,0")
+osci.WriteString("VBS 'app.Acquisition.C4.Skew = 0'")
+
+# osci.write(":CHANnel1:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C1.View = 1'")
+# osci.write(":CHANnel2:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C2.View = 1'")
+# osci.write(":CHANnel3:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C3.View = 1'")
 
 return osci
 '''
@@ -84,57 +91,141 @@ initScope.wantAllVarsGlobal = False
 
 performScopeMeasurement.args = ''
 performScopeMeasurement.code = r'''# Set timebase to proper value
-osci.write(":TIMebase:SCALe 5e-08")
+# osci.write(":TIMebase:SCALe 5e-08")
+# osci.write("VBS 'app.Acquisition.Horizontal.TimePerDivision = 5e-8'")
+
+# osci.write(":CHANnel1:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C1.View = 1'", 1)
+# osci.write(":CHANnel2:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C2.View = 1'", 1)
+# osci.write(":CHANnel3:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C3.View = 1'", 1)
+
+osci.writestring("VBS 'app.Acquisition.Horizontal.HorScale = 5e-8'", 1)
 
 # Autoscale the channels
-osci.write(":AUToscale:VERTical CHANnel1")
-osci.write(":AUToscale:VERTical CHANnel2")
-osci.write(":AUToscale:VERTical CHANnel3")
+
+osci.WriteString("VBS 'app.Autoset.FindAllVerScale'", 1)
+osci.WriteString("VBS? 'return=app.WaitUntilIdle(5)'", 1)
+osci.WriteString("VBS 'app.Autoset.DoAutosetup'", 1)
+osci.WriteString("*OPC?", 1)
+
+# osci.write(":AUToscale:VERTical CHANnel1")
+#osci.write("VBS 'app.Acquisition.C1.AutoScale()'")
+# osci.write(":AUToscale:VERTical CHANnel2")
+#osci.write("VBS 'app.Acquisition.C2.AutoScale()'")
+# osci.write(":AUToscale:VERTical CHANnel3")
+#osci.write("VBS 'app.Acquisition.C3.AutoScale()'")
 
 # Clear display
-osci.write(":CDISplay")
+# osci.write(":CDISplay")
+# osci.write("VBS 'app.ClearSweeps()'")
+osci.WriteString("VBS 'app.Measure.ClearSweeps'", 1)
 
 # Measure average voltage of channel 1 to set trigger level
-osci.write(":MEASure:VAVerage DISPlay,CHANnel1")
+# osci.write(":MEASure:VAVerage DISPlay,CHANnel1")
+
+osci.WriteString("VBS 'app.Measure.P1.MeasurementType = 0'", 1)
+osci.WriteString("VBS 'app.Measure.ShowMeasure = true",1)
+osci.WriteString("VBS 'app.Measure.P1.Source1 = 0'", 1)
+osci.WriteString("VBS 'app.Measure.P2.Source1 = 0'", 1)
+
 
 sleepMillis(calOptions.scopeAutoScaleDelay)
-varAverage = osci.query_ascii_values(":MEASure:VAVerage? DISPlay,CHANnel1")
+# varAverage = osci.query_ascii_values(":MEASure:VAVerage? DISPlay,CHANnel1")
+osci.WriteString("VBS 'app.Measure.P1.ParamEngine = 7'", 1)
+osci.WriteString("VBS? 'return = app.WaitUntilIdle(5)'", 1)
+osci.WriteString("VBS app.sleep(1000)'", 1)
+osci.WriteString("VBS? 'return = app.Measure.P1.mean.Result.Value'", 1)
+varAverage = osci.ReadString(500)
+#print (varAverage)
+#osci.WriteString("VBS? 'return = app.Measure.P1.Out.Result.Value'", 1)
 currentValue = varAverage[0]
+#currentValue = float(varAverage[0])
 
-osci.write(":MEASure:VAMPlitude CHANNEL1")
+
+# osci.write(":MEASure:VAMPlitude CHANNEL1")
+osci.WriteString("VBS 'app.Measure.P2.Source1 = 0'", 1)
+osci.WriteString("VBS 'app.Measure.P2.ParamEngine = 3'", 1)
 sleepMillis(calOptions.scopeMeasurementDelay)
-varAmp = osci.query_ascii_values(":MEASure:VAMPlitude? CHANNEL1")
-currentAmp = varAmp[0]
 
-triggerValue = currentValue - 0.25*currentAmp
+# varAmp = osci.query_ascii_values(":MEASure:VAMPlitude? CHANNEL1")
+#varAmp = osci.WriteString("VBS? 'return = app.Measure.P1.mean.Result.Value'", 1)
+#osci.WriteString("VBS? 'return = app.Measure.P1.mean.Result.Value'", 1)
+osci.WriteString("VBS? 'return = app.WaitUntilIdle(5)'", 1)
+osci.WriteString("VBS? 'return = app.Measure.P2.mean.Result.Value'", 1)
+varAmp = osci.ReadString(500)
+#print (varAmp)
+currentAmp = varAmp[0]
+#currentAmp = float(varAmp[0])
+
+#triggerValue = currentValue - 0.25*currentAmp
 
 # Set trigger level to be just below the mid-point of the 3-level waveform
-myString = ":TRIGger:LEVel CHANNEL1, %f" % triggerValue
-osci.write(myString)
+# myString = ":TRIGger:LEVel CHANNEL1, %f" % triggerValue
+#myString = "VBS 'app.Acquisition.Trigger.Edge.Level = %f'" % triggerValue
+#osci.WriteString(myString)
 
 # Clear display
-osci.write(":CDISplay")
+# osci.write(":CDISplay")
+osci.WriteString("VBS 'app.Measure.ClearSweeps'", 1)
 sleepMillis(100)
 
 ## Now perform measurements on all channels
 commonModeReturnList = list()
 amplitudeReturnList = list()
+
+#for channel in [1,2,3] :
 for channel in [1,2,3] :
-    channelString = "CHANNEL%d" % channel
-    commonModeMeasurementString = ":MEASure:VAVerage DISPlay,"+channelString
-    osci.write(commonModeMeasurementString)
-    sleepMillis(calOptions.scopeMeasurementDelay)
-    commonModeMeasurementString = ":MEASure:VAVerage? DISPlay,"+channelString
-    varAverage = osci.query_ascii_values(commonModeMeasurementString)
-    commonModeReturnList.append(varAverage[0]*1000) #convert to mV
+    #channelString = "CHANNEL%d" % channel
+    #channelString = "%d"
+    channelString = "C%d" % channel
+    print(channelString)
 
-    amplitudeMeasurementString = ":MEASure:VAMPlitude "+channelString
-    osci.write(amplitudeMeasurementString)
+    #commonModeMeasurementString = ":MEASure:VAVerage DISPlay,"+channelString
+    commonModeMeasurementString = "VBS 'app.Measure.P1.Source1 = \"%s\"'" % channelString
+    #commonModeMeasurementString = "VBS 'app.Measure.P1.Source1 = \"%channelString\"'" % channelString
+    #osci.write(commonModeMeasurementString)
+    osci.writestring(commonModeMeasurementString, 1)
     sleepMillis(calOptions.scopeMeasurementDelay)
-    amplitudeMeasurementString = ":MEASure:VAMPlitude? "+channelString
-    varAmp = osci.query_ascii_values(amplitudeMeasurementString)
-    amplitudeReturnList.append(varAmp[0]*1000) #convert to mV
+    #commonModeMeasurementString = ":MEASure:VAVerage? DISPlay,"+channelString
+    commonModeMeasurementString = "VBS? 'return = app.Measure.P1.out.Result.Value'"
+    varAverage = osci.WriteString(commonModeMeasurementString, 1)
+    varAverage = osci.ReadString(500)
+    try:
+        varAverage = float(varAverage.strip()) * 1000  # Convert from V to mV
+        print(varAverage)
+        commonModeReturnList.append(varAverage)
+    except ValueError:
+        varAverage = 0.0  # Fallback in case of conversion error
 
+
+
+        #commonModeReturnList.append(varAverage[0]*1000) #convert to mV
+
+
+    #amplitudeMeasurementString = ":MEASure:VAMPlitude "+channelString
+    amplitudeMeasurementString = "VBS app.Measure.P2.Source1 = \"%s\"'" % channelString
+    #osci.write(amplitudeMeasurementString)
+    osci.writestring(amplitudeMeasurementString, 1)
+    sleepMillis(calOptions.scopeMeasurementDelay)
+    #amplitudeMeasurementString = ":MEASure:VAMPlitude? "+channelString
+    amplitudeMeasurementString = "VBS? 'return = app.Measure.P2.out.Result.Value'"
+    #varAmp = osci.query_ascii_values(amplitudeMeasurementString)
+    varAmp = osci.WriteString(amplitudeMeasurementString, 1)
+    varAmp = osci.ReadString(500)
+    #MYSTRING2 = amplitudeReturnList.append(varAmp[0]*1000) #convert to mV
+    try:
+
+        varAmp = float(varAmp.strip()) * 1000  # Convert from V to mV
+        print(varAmp)
+        amplitudeReturnList.append(varAmp)
+    except ValueError:
+        varAmp = 0.0  # Fallback in case of conversion error
+
+
+print (commonModeReturnList)
+print (amplitudeReturnList)
 return(commonModeReturnList, amplitudeReturnList)
 '''
 performScopeMeasurement.wantAllVarsGlobal = False
@@ -383,6 +474,9 @@ resultFolderCreator1._showInList = False
 # Check Version
 iesp = getIespInstance()
 import numpy as np
+import win32com.client
+osci=win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
+
 
 svtVersion = getSvtVersion()
 if svtVersion < calOptions.minVersion:
@@ -402,8 +496,10 @@ else:
 print(impedance)
 
 # Connect to scope
-osci = initScope(calOptions.scopeIPAddress)
+#osci = initScope(calOptions.scopeIPAddress)
 
+osci.MakeConnection("IP:169.254.197.102")
+osci.WriteString("buzz beep", 1)
 # Initialize generator
 mipiCphyGenerator1.lanes = calOptions.calLanes
 mipiClockConfig1.dataRate = calOptions.calDataRate
