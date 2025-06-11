@@ -22,30 +22,27 @@ mipiProtocol = _create('mipiProtocol', 'SvtMipiProtocol')
 resultFolderCreator1 = _create('resultFolderCreator1', 'SvtResultFolderCreator')
 
 initScope.args = 'scopeIpAddress'
-initScope.code = r'''import pyvisa as visa
-#connect to scope
-rm = visa.ResourceManager()
-osci = rm.open_resource(scopeIpAddress)
-osci.lock_excl()
+initScope.code = r'''import win32com.client
 
-osci.read_termination = '\n'
-osci.write_termination = '\n'
-osci.timeout = validationOptions.scopeConnectionTimeout
+# Connect to Lecroy scope using ActiveDSO
+osci = win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
+osci.MakeConnection(scopeIpAddress)
+sleepMillis(validationOptions.scopeConnectionTimeout)
 
-# Set to center by going to default
-osci.write(":SYSTem:PRESet DEFault")
+# Reset all scope settings to default
+osci.WriteString("*RST", True)
 sleepMillis(validationOptions.scopeAutoScaleDelay)
 
-# Make sure all skew are at 0. This is not reset by default
-osci.write(":CALibrate:SKEW CHANnel1,0")
-osci.write(":CALibrate:SKEW CHANnel2,0")
-osci.write(":CALibrate:SKEW CHANnel3,0")
-osci.write(":CALibrate:SKEW CHANnel4,0")
+# Set deskew to 0 for all channels
+osci.WriteString("C1:DESKEW 0", True)
+osci.WriteString("C2:DESKEW 0", True)
+osci.WriteString("C3:DESKEW 0", True)
+osci.WriteString("C4:DESKEW 0", True)
 
-# Display/Enable the channels
-osci.write(":CHANnel1:DISPlay 1")
-osci.write(":CHANnel2:DISPlay 1")
-osci.write(":CHANnel3:DISPlay 1")
+# Enable channels
+osci.WriteString("C1:TRA ON", True)
+osci.WriteString("C2:TRA ON", True)
+osci.WriteString("C3:TRA ON", True)
 
 return osci
 '''
@@ -53,59 +50,54 @@ initScope.wantAllVarsGlobal = False
 
 performScopeMeasurement.args = ''
 performScopeMeasurement.code = r'''# Set timebase to proper value
-osci.write(":TIMebase:SCALe 5e-08")
+osci.WriteString("TDIV 50NS", True)
 
 # Autoscale the channels
-osci.write(":AUToscale:VERTical CHANnel1")
-osci.write(":AUToscale:VERTical CHANnel2")
-osci.write(":AUToscale:VERTical CHANnel3")
+osci.WriteString("C1:ASET FIND", True)
+osci.WriteString("C2:ASET FIND", True)
+osci.WriteString("C3:ASET FIND", True)
 
 # Clear display
-osci.write(":CDISplay")
+osci.WriteString("CLEAR_SWEEPS", True)
 
-# Measure average voltage of channel 1 to set trigger level
-osci.write(":MEASure:VAVerage DISPlay,CHANnel1")
+# Setup measurement parameters for average and amplitude
+osci.WriteString("C1:PARAMETER_CUSTOM 'P1', 'VoltAvg'", True)
+osci.WriteString("C1:PARAMETER_CUSTOM 'P2', 'PkPk'", True)
 
 sleepMillis(validationOptions.scopeAutoScaleDelay)
-varAverage = osci.query_ascii_values(":MEASure:VAVerage? DISPlay,CHANnel1")
-currentValue = varAverage[0]
+currentValue = float(osci.WriteString("C1:PARAMETER_VALUE? P1", True))
 
-osci.write(":MEASure:VAMPlitude CHANNEL1")
 sleepMillis(validationOptions.scopeMeasurementDelay)
-varAmp = osci.query_ascii_values(":MEASure:VAMPlitude? CHANNEL1")
-currentAmp = varAmp[0]
+currentAmp = float(osci.WriteString("C1:PARAMETER_VALUE? P2", True))
 
 triggerValue = currentValue - 0.25*currentAmp
 
 # Set trigger level to be just below the mid-point of the 3-level waveform
-myString = ":TRIGger:LEVel CHANNEL1, %f" % triggerValue
-osci.write(myString)
+osci.WriteString(f"C1:TRLV {triggerValue}", True)
 
-# Clear display
-osci.write(":CDISplay")
+# Clear display and wait
+osci.WriteString("CLEAR_SWEEPS", True)
 sleepMillis(100)
 
 ## Now perform measurements on all channels
 commonModeReturnList = list()
 amplitudeReturnList = list()
 for channel in [1,2,3] :
-    channelString = "CHANNEL%d" % channel
-    commonModeMeasurementString = ":MEASure:VAVerage DISPlay,"+channelString
-    osci.write(commonModeMeasurementString)
+    # Setup measurements for each channel
+    osci.WriteString(f"C{channel}:PARAMETER_CUSTOM 'P1', 'VoltAvg'", True)
+    osci.WriteString(f"C{channel}:PARAMETER_CUSTOM 'P2', 'PkPk'", True)
     sleepMillis(validationOptions.scopeMeasurementDelay)
-    commonModeMeasurementString = ":MEASure:VAVerage? DISPlay,"+channelString
-    varAverage = osci.query_ascii_values(commonModeMeasurementString)
+    
+    # Get average voltage
+    varAverage = float(osci.WriteString(f"C{channel}:PARAMETER_VALUE? P1", True))
     if validationOptions.connectedToTerminationBoard :
-        commonModeReturnList.append(varAverage[0]*1000) #convert to mV
+        commonModeReturnList.append(varAverage*1000) #convert to mV
     else:
-        commonModeReturnList.append((varAverage[0]*1000*(50+impedance))/(50)) #convert to mV and apply scope attenuation factor
+        commonModeReturnList.append((varAverage*1000*(50+impedance))/(50)) #convert to mV and apply scope attenuation factor
 
-    amplitudeMeasurementString = ":MEASure:VAMPlitude "+channelString
-    osci.write(amplitudeMeasurementString)
-    sleepMillis(validationOptions.scopeMeasurementDelay)
-    amplitudeMeasurementString = ":MEASure:VAMPlitude? "+channelString
-    varAmp = osci.query_ascii_values(amplitudeMeasurementString)
-    amplitudeReturnList.append(varAmp[0]*1000) #convert to mV
+    # Get amplitude
+    varAmp = float(osci.WriteString(f"C{channel}:PARAMETER_VALUE? P2", True))
+    amplitudeReturnList.append(varAmp*1000) #convert to mV
 
 return(commonModeReturnList, amplitudeReturnList)
 '''
@@ -146,7 +138,7 @@ else:
 performValidationOnCollectedData.wantAllVarsGlobal = False
 
 validationOptions.addField('serialNumber', descrip='''Serial number of device under test''', attrType=str, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal='1234', displayOrder=(0, 1.0))
-validationOptions.addField('scopeIPAddress', descrip='''Visa string specifying location of the calibration scope. Only Keysight scopes are supported''', attrType=str, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal='TCPIP0::10.20.20.200::inst0::INSTR', displayOrder=(0, 2.0))
+validationOptions.addField('scopeIPAddress', descrip='''IP address or hostname of the Teledyne Lecroy oscilloscope''', attrType=str, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal='10.20.20.200', displayOrder=(0, 2.0))
 validationOptions.addField('scopeMeasurementDelay', descrip='''Amount of average accumulation time in milliseconds.''', attrType=float, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal=3000.0, displayOrder=(0, 3.0))
 validationOptions.addField('scopeAutoScaleDelay', descrip='''Amount of time after a scope auto-scale function''', attrType=float, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal=2000.0, displayOrder=(0, 4.0))
 validationOptions.addField('calDataRate', descrip='''Base data rate for performing voltage measurements''', attrType=float, iespInstanceName='SV5C_4L8G_MIPI_CPHY_GENERATOR', defaultVal=500.0, displayOrder=(0, 5.0))
@@ -167,7 +159,7 @@ pass
 ''',
 False)
 validationOptions.serialNumber = '1234'
-validationOptions.scopeIPAddress = 'TCPIP0::10.20.20.200::inst0::INSTR'
+validationOptions.scopeIPAddress = '10.20.20.200'
 validationOptions.scopeMeasurementDelay = 3000.0
 validationOptions.scopeAutoScaleDelay = 2000.0
 validationOptions.calDataRate = 500.0
