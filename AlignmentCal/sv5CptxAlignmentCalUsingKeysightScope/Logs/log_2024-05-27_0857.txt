@@ -1,0 +1,26 @@
+Pinetree (v 24.3.b11)
+--------------------------------------------------------------------------------
+*** Starting Test 'sv5CptxAlignmentCalUsingKeysightScope'
+2024-05-27_0857_01
+--------------------------------------------------------------------------------
+ERROR: Exception when executing function 'initScope':
+VisaIOError: VI_ERROR_RSRC_NFOUND (-1073807343): Insufficient location information or the requested device or resource is not present in the system.
+Traceback (most recent call last):
+  File "<string>", line 4, in initScope
+    osci = rm.open_resource(scopeIpAddress)
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\highlevel.py", line 3283, in open_resource
+    res.open(access_mode, open_timeout)
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\resources\resource.py", line 278, in open
+    self._resource_name, access_mode, open_timeout
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\highlevel.py", line 3208, in open_bare_resource
+    return self.visalib.open(self.session, resource_name, access_mode, open_timeout)
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\ctwrapper\functions.py", line 1851, in open
+    session, resource_name, access_mode, open_timeout, byref(out_session)
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\ctwrapper\highlevel.py", line 225, in _return_handler
+    return self.handle_return_value(session, ret_value)  # type: ignore
+  File "C:\Introspect\IntrospectESP_24.3.b11\PythonEnv\lib\site-packages\pyvisa\highlevel.py", line 250, in handle_return_value
+    raise errors.VisaIOError(rv)
+********************************************************************************
+Test run aborted due to error
+Test took 3.0 seconds
+--------------------------------------------------------------------------------

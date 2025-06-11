@@ -1,0 +1,12 @@
+Pinetree (v 24.3.b11)
+--------------------------------------------------------------------------------
+*** Starting Test 'sv5CptxAlignmentCalUsingKeysightScope'
+2024-05-27_0901_01
+--------------------------------------------------------------------------------
+Starting MipiCphyGenerator setup
+Starting clock config setup
+ERROR: dataRate cannot exceed 6500 Msps
+********************************************************************************
+Test run aborted due to error
+Test took 6.4 seconds
+--------------------------------------------------------------------------------

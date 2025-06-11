@@ -1,0 +1,11 @@
+Pinetree (v 24.3.b11)
+Connecting to serialNum 'FTDI:INSV5T20050009A'
+Connected to subPart 'SV5C_4L8G_MIPI_CPHY_GENERATOR_A'
+Connecting to serialNum 'FTDI:INSV5T20050009B'
+Initializing IESP hardware/firmware
+Firmware: FWSV5CCPTX01A008_FW00
+Doing post-connection initialization
+WARNING: The current firmware personality on SV5C_4L8G_MIPI_CPHY_GENERATOR_A is 'FWSV5CCPTX01A008' but this is not one of the personalities known to be compatible with Pinetree (v 24.3.b11) for form factor 'SV5C_4L8G_MIPI_CPHY_GENERATOR'
+Some operations may not work correctly.
+The following personalities are supported:
+FWSV5CCPTX01A010,FWSV5CCPTX01B010,FWSV5CCPTX01C010

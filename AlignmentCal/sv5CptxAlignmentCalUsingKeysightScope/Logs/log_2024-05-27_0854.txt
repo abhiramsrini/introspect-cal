@@ -1,0 +1,19 @@
+Pinetree (v 24.3.b11)
+Connecting to serialNum 'FTDI:INSV5T20050009A'
+Connected to subPart 'SV5C_4L8G_MIPI_CPHY_GENERATOR_A'
+No FTDI devices available
+Will try again in 2 seconds
+No FTDI devices available
+Failed to connect to subPart 'SV5C_4L8G_MIPI_CPHY_GENERATOR_B'
+WARNING: Failed to correctly initialize hardware; disconnecting.
+Disconnected IESP.
+Connecting to serialNum 'FTDI:INSV5T20050009A'
+Connected to subPart 'SV5C_4L8G_MIPI_CPHY_GENERATOR_A'
+Connecting to serialNum 'FTDI:INSV5T20050009B'
+Initializing IESP hardware/firmware
+Firmware: FWSV5CCPTX01A008_FW00
+Doing post-connection initialization
+
+Viewer Std Out:
+--------------------------------------------
+Formfactor SV5C_4L8G_MIPI_CPHY_GENERATOR initialized

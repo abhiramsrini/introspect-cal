@@ -1,0 +1,31 @@
+Pinetree (v 24.3.b11)
+--------------------------------------------------------------------------------
+*** Starting Test 'sv5CptxAlignmentCalUsingKeysightScope'
+2024-05-27_0901_26
+--------------------------------------------------------------------------------
+Starting MipiCphyGenerator setup
+Starting clock config setup
+New clock configuration
+Calculating clocking parameters... (will take several seconds)
+Measuring C-PHY Lane 4...
+Measuring at 4001.000000 Mbps...
+Starting MipiCphyGenerator setup
+Starting clock config setup
+New clock configuration
+Calculating clocking parameters... (will take several seconds)
+Performing coarse loop...
+delay is 0...
+ 
+Performing coarse loop...
+delay is -1.1087e-08...
+Performing coarse loop...
+********************************************************************************
+Test run cancelled by user
+Test took 1.4 minutes
+--------------------------------------------------------------------------------
+checkConnection: device not responding, so disconnecting
+Disconnected IESP.
+
+Viewer Std Out:
+--------------------------------------------
+Formfactor SV5C_4L8G_MIPI_CPHY_GENERATOR initialized
