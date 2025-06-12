@@ -33,13 +33,13 @@ import time
 # Make sure all skew are at 0. This is not reset by default
 print("Setting skew to 0")
 # osci.write(":CALibrate:SKEW CHANnel1,0")
-osci.WriteString("VBS 'app.Acquisition.C1.Skew = 0'", 1)
+osci.WriteString("VBS 'app.Acquisition.C1.Deskew = 0'", 1)
 # osci.write(":CALibrate:SKEW CHANnel2,0")
-osci.WriteString("VBS 'app.Acquisition.C2.Skew = 0'", 1)
+osci.WriteString("VBS 'app.Acquisition.C2.Deskew = 0'", 1)
 # osci.write(":CALibrate:SKEW CHANnel3,0")
-osci.WriteString("VBS 'app.Acquisition.C3.Skew = 0'", 1)
+osci.WriteString("VBS 'app.Acquisition.C3.Deskew = 0'", 1)
 # osci.write(":CALibrate:SKEW CHANnel4,0")
-osci.WriteString("VBS 'app.Acquisition.C4.Skew = 0'", 1)
+osci.WriteString("VBS 'app.Acquisition.C4.Deskew = 0'", 1)
 
 # Display the channels
 print("Setting channels to display")
