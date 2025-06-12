@@ -138,17 +138,17 @@ initScope.wantAllVarsGlobal = False
 measureDeltaTime.args = 'channel'
 measureDeltaTime.code = r'''# Assumes all measurements are relative to channel 1
 channelString = "CHANNEL%d" % channel
-commandString = ":MEASure:DELTatime CHANnel1,"+channelString
+commandString = ":MEASure:DELTatime CHANnel1,"+channelString # Calculate the delata time between channel 1 and the specified channel
 osci.write(commandString)
 
 sleepMillis(calOptions.scopeAutoScaleDelay)
 
 currentDeltaTime = 0
-commandString = ":MEASure:DELTatime? CHANnel1,"+channelString
+commandString = ":MEASure:DELTatime? CHANnel1,"+channelString # Query the delata time between channel 1 and the specified channel
 for i in range(calOptions.numAverages) :
-    varAmp = osci.query_ascii_values(commandString)
-    currentDeltaTime += varAmp[0]
-currentDeltaTime = currentDeltaTime / calOptions.numAverages
+    varAmp = osci.query_ascii_values(commandString) # Get the delta time value
+    currentDeltaTime += varAmp[0] # Add to the total
+currentDeltaTime = currentDeltaTime / calOptions.numAverages # Calculate the average
 
 return currentDeltaTime
 '''
