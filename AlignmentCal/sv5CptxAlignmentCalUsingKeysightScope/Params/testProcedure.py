@@ -305,10 +305,16 @@ resultFolderCreator1.resultType = 'CsvData'
 #! TEST PROCEDURE
 svtVersion = requireSvtVersionInRange("23.1", None)
 import numpy as np
-
 iesp = getIespInstance()
+import win32com.client
+osci=win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
+
+
 # Connect to scope
-osci = initScope(calOptions.scopeIPAddress)
+#osci = initScope(calOptions.scopeIPAddress)
+osci.MakeConnection("IP:169.254.197.102")
+osci.WriteString("buzz beep", 1)
+
 iesp.setMeasurementTimeout(60000)
 
 ### All Rates are in OS=2 range ###

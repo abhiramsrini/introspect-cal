@@ -58,7 +58,7 @@ time.sleep(calOptions.scopeAutoScaleDelay)
 
 # Clear display
 print("Clearing display")
-osci.write(":CDISplay")
+#osci.write(":CDISplay")
 osci.WriteString("VBS 'app.Measure.ClearSweeps'", 1)
 sleepMillis(100)
 
@@ -194,7 +194,7 @@ initScope.wantAllVarsGlobal = False
 
 measureDeltaTime.args = 'channel'
 measureDeltaTime.code = r'''# Assumes all measurements are relative to channel 1
-cimport time
+import time
 channelString = "C%d" % channel
 print ("channel string is %s" % channelString)
 osci.WriteString("VBS 'app.Measure.P1.Source1 = 0'" , 1)
