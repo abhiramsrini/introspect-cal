@@ -25,62 +25,100 @@ resultFolderCreator1 = _create('resultFolderCreator1', 'SvtResultFolderCreator')
 
 autoscaleScope.args = ''
 autoscaleScope.code = r'''# Set to center by going to default
-osci.write(":SYSTem:PRESet DEFault")
-sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":SYSTem:PRESet DEFault")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+
+import time
 
 # Make sure all skew are at 0. This is not reset by default
-osci.write(":CALibrate:SKEW CHANnel1,0")
-osci.write(":CALibrate:SKEW CHANnel2,0")
-osci.write(":CALibrate:SKEW CHANnel3,0")
-osci.write(":CALibrate:SKEW CHANnel4,0")
+print("Setting skew to 0")
+# osci.write(":CALibrate:SKEW CHANnel1,0")
+osci.WriteString("VBS 'app.Acquisition.C1.Skew = 0'", 1)
+# osci.write(":CALibrate:SKEW CHANnel2,0")
+osci.WriteString("VBS 'app.Acquisition.C2.Skew = 0'", 1)
+# osci.write(":CALibrate:SKEW CHANnel3,0")
+osci.WriteString("VBS 'app.Acquisition.C3.Skew = 0'", 1)
+# osci.write(":CALibrate:SKEW CHANnel4,0")
+osci.WriteString("VBS 'app.Acquisition.C4.Skew = 0'", 1)
 
 # Display the channels
-osci.write(":CHANnel1:DISPlay 1")
-osci.write(":CHANnel2:DISPlay 1")
-osci.write(":CHANnel3:DISPlay 1")
-osci.write(":CHANnel4:DISPlay 1")
+print("Setting channels to display")
+osci.WriteString("VBS 'app.Acquisition.C1.View = true'", 1)
+osci.WriteString("VBS 'app.Acquisition.C2.View = true'", 1)
+osci.WriteString("VBS 'app.Acquisition.C3.View = true'", 1)
+osci.WriteString("VBS 'app.Acquisition.C4.View = true'", 1)
+
+print("Setting channels to autoscale")
+osci.WriteString("VBS 'app.Autoset.FindAllVerScale'", 1)
+osci.WriteString("VBS 'app.Autoset.DoAutosetup'", 1)
+osci.WriteString("VBS? 'return=app.WaitUntilIdle(5)'", 1)
+osci.WriteString("*OPC?", 1)
 
 # Autoscale the channels
-osci.write(":AUToscale:VERTical CHANnel1")
-sleepMillis(calOptions.scopeAutoScaleDelay)
-osci.write(":AUToscale:VERTical CHANnel2")
-sleepMillis(calOptions.scopeAutoScaleDelay)
-osci.write(":AUToscale:VERTical CHANnel3")
-sleepMillis(calOptions.scopeAutoScaleDelay)
-osci.write(":AUToscale:VERTical CHANnel4")
-sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":AUToscale:VERTical CHANnel1")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":AUToscale:VERTical CHANnel2")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":AUToscale:VERTical CHANnel3")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":AUToscale:VERTical CHANnel4")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+
 # Clear display
+print("Clearing display")
 osci.write(":CDISplay")
+osci.WriteString("VBS 'app.Measure.ClearSweeps'", 1)
+sleepMillis(100)
 
 # Make sure we're getting mean values
-osci.write(":MEASure:STATistics MEAN")
+#osci.write(":MEASure:STATistics MEAN")
 
 
 # Measure average voltage of channel 1 to set trigger level
-osci.write(":MEASure:VAVerage DISPlay,CHANnel1")
-sleepMillis(calOptions.scopeAutoScaleDelay)
-varAverage = osci.query_ascii_values(":MEASure:VAVerage? DISPlay,CHANnel1")
-currentValue = varAverage[0]
+#osci.write(":MEASure:VAVerage DISPlay,CHANnel1")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+#varAverage = osci.query_ascii_values(":MEASure:VAVerage? DISPlay,CHANnel1")
+#currentValue = varAverage[0]
 
-triggerValue = currentValue
+#triggerValue = currentValue
+osci.WriteString("VBS 'app.Measure.P1.MeasurementType = 0'", 1)
+osci.WriteString("VBS 'app.Measure.ShowMeasure = true",1)
+osci.WriteString("VBS 'app.Measure.StatsOn = true",1)
+
 
 # Set trigger level to be just below the mid-point of the 3-level waveform
-myString = ":TRIGger:LEVel CHANNEL1, %f" % triggerValue
-osci.write(myString)
+#myString = ":TRIGger:LEVel CHANNEL1, %f" % triggerValue
+#osci.write(myString)
 
 # Clear display
-osci.write(":CDISplay")
+#osci.write(":CDISplay")
+#sleepMillis(100)
+osci.WriteString("VBS 'app.Measure.ClearSweeps'", 1)
 sleepMillis(100)
 
 # Set timebase to proper value
-osci.write(":TIMebase:SCALe 100e-012")
-
+#osci.write(":TIMebase:SCALe 100e-012")
+print("Setting timebase to 100 ps")
+osci.writestring("VBS 'app.Acquisition.Horizontal.HorScale = 100e-012'", 1)
+time.sleep(2)
+osci.writestring("VBS 'app.Acquisition.Trigger.C1Slope = 0'", 1)
 # Turn averaging on
-osci.write(":ACQuire:AVERage:COUNt 16")
-osci.write(":ACQuire:AVERage 1")
+#osci.write(":ACQuire:AVERage:COUNt 16")
+#osci.write(":ACQuire:AVERage 1")
+print("Setting averaging to 16 sweeps")
+osci.writestring("VBS 'app.Acquisition.C1.AverageSweeps = 16'", 1)
+osci.writestring("VBS 'app.Acquisition.C2.AverageSweeps = 16'", 1)
+osci.writestring("VBS 'app.Acquisition.C3.AverageSweeps = 16'", 1)
+osci.writestring("VBS 'app.Acquisition.C4.AverageSweeps = 16'", 1)
 
 # Define delta-time measurement parameters
-osci.write(":MEASure:DELTatime:DEFine RISing,1,MIDDle,RISing,1,MIDDle")
+#osci.write(":MEASure:DELTatime:DEFine RISing,1,MIDDle,RISing,1,MIDDle")
+print("Setting delta-time measurement parameters")
+osci.WriteString("VBS 'app.Measure.P1.ParamEngine = \"DeltaTimeAtLevel\"'", 1)
+osci.WriteString("VBS 'app.Measure.P1.Operator.Slope1 = 0'", 1)
+osci.WriteString("VBS 'app.Measure.P1.Operator.PercentLevel1 = 50'", 1)
+osci.WriteString("VBS 'app.Measure.P1.Operator.Slope2 = 0'", 1)
+osci.WriteString("VBS 'app.Measure.P1.Operator.PercentLevel2 = 50'", 1)
 '''
 autoscaleScope.wantAllVarsGlobal = False
 
@@ -110,18 +148,31 @@ calOptions.callCustomInitMethod()
 initScope.args = 'scopeIpAddress'
 initScope.code = r'''import pyvisa
 #connect to scope
-rm = pyvisa.ResourceManager()
+rm = visa.ResourceManager()
 osci = rm.open_resource(scopeIpAddress)
+
+import win32com.client #imports the pywin32 library
+osci=win32com.client.Dispatch("LeCroy.ActiveDSOCtrl.1")
+osci.MakeConnection("IP:169.254.197.102")
+print("Connected to scope at %s" % scopeIpAddress)
+osci.WriteString("buzz beep", 1)
 #osci.lock_excl()
 # Set to center by going to default
-osci.write(":SYSTem:PRESet DEFault")
-sleepMillis(calOptions.scopeAutoScaleDelay)
+#osci.write(":SYSTem:PRESet DEFault")
+#sleepMillis(calOptions.scopeAutoScaleDelay)
+osci.WriteString("VBS 'app.SetToDefaultSetup'", 1)
+osci.WriteString("*OPC?", 1)
 
 # Display/Enable the channels
-osci.write(":CHANnel1:DISPlay 1")
-osci.write(":CHANnel2:DISPlay 1")
-osci.write(":CHANnel3:DISPlay 1")
-osci.write(":CHANnel4:DISPlay 1")
+#osci.write(":CHANnel1:DISPlay 1")
+print("Setting channels to display")
+osci.WriteString("VBS 'app.Acquisition.C1.View = true'", 1)
+#osci.write(":CHANnel2:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C2.View = true'", 1)
+#osci.write(":CHANnel3:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C3.View = true'", 1)
+#osci.write(":CHANnel4:DISPlay 1")
+osci.WriteString("VBS 'app.Acquisition.C4.View = true'", 1)
 osci.timeout = 10000
 
 return osci
@@ -130,17 +181,31 @@ initScope.wantAllVarsGlobal = False
 
 measureDeltaTime.args = 'channel'
 measureDeltaTime.code = r'''# Assumes all measurements are relative to channel 1
-channelString = "CHANNEL%d" % channel
-commandString = ":MEASure:DELTatime CHANnel1,"+channelString
-osci.write(commandString)
+import time
+channelString = "C%d" % channel
+print ("channel string is %s" % channelString)
+osci.WriteString("VBS 'app.Measure.P1.Source1 = 0'" , 1)
 
+#commandString = ":MEASure:DELTatime CHANnel1,"+channelString
+#commandString = ":MEASure:DELTatime CHANnel1,"+channelString
+commandString = "VBS 'app.Measure.P1.Source2 = \"%s\"'" % channelString
+#osci.write(commandString)
+osci.WriteString(commandString, 1)
 sleepMillis(calOptions.scopeAutoScaleDelay)
-
+commandString = "VBS? 'return = app.Measure.P1.mean.Result.Value'"
+osci.WriteString(commandString, 1)
 currentDeltaTime = 0
-commandString = ":MEASure:DELTatime? CHANnel1,"+channelString
+
+#commandString = ":MEASure:DELTatime? CHANnel1,"+channelString
 for i in range(calOptions.numAverages) :
-    varAmp = osci.query_ascii_values(commandString)
-    currentDeltaTime += varAmp[0]
+    #varAmp = osci.query_ascii_values(commandString)
+    varAmp = osci.WriteString(commandString, 1)
+    sleepMillis(50)
+    varAmp = osci.ReadString(100)
+    osci.WriteString("VBS? 'return=app.WaitUntilIdle(5)'", 1)
+    osci.WriteString("*OPC?", 1)
+    currentDeltaTime += float(varAmp)
+
 currentDeltaTime = currentDeltaTime / calOptions.numAverages
 
 return currentDeltaTime
@@ -157,6 +222,7 @@ performScopeCal.code = r'''if lane == 4 and wire == 2:
 
 else: # channels 2-16
     print("Performing coarse loop...")
+    print ("Position is %d" %position)
     coarseDelay = measureDeltaTime(position)
     print("delay is %g..." % coarseDelay)
 
